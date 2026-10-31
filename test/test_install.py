@@ -1,4 +1,4 @@
-"""install.sh 的测试：本机起一个假的发布地址（latest 跳转、下载包与 SHA256SUMS），跑 install.sh 看装没装对。
+"""Tests for install.sh: serve fake releases locally (latest redirect, packages, SHA256SUMS) and check what install.sh installs.
 
     python3 -m unittest discover -s test
 """
@@ -25,7 +25,7 @@ def host_target():
 
 
 def fake_package(version):
-    """一个只会回答 --version 的假 kusa-connect，打成发布包。"""
+    """A fake kusa-connect that only answers --version, packed like a release."""
     body = f"#!/bin/sh\necho kusa-connect {version}\n".encode()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
@@ -36,7 +36,7 @@ def fake_package(version):
 
 
 class Releases:
-    """假的 GitHub Releases：/latest 跳到 /tag/v<latest>，/download/v<版本>/<文件> 给文件。"""
+    """Fake GitHub Releases: /latest redirects to /tag/v<latest>; /download/v<version>/<file> serves files."""
 
     def __init__(self, latest, versions, corrupt=False):
         os_name, arch = host_target()
@@ -104,10 +104,20 @@ class InstallTest(unittest.TestCase):
         p, binary = self.run_install(r)
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertIn("kusa-connect 0.2.0", p.stdout)
-        self.assertIn("不在 PATH 里", p.stdout)
+        self.assertIn("is not on your PATH", p.stdout)
         out = subprocess.run([binary, "--version"], capture_output=True, text=True).stdout
         self.assertEqual(out, "kusa-connect 0.2.0\n")
         self.assertEqual(os.stat(binary).st_mode & 0o777, 0o755)
+
+    def test_utf8_locale(self):
+        # Most terminals use a UTF-8 locale; macOS /bin/sh (bash 3.2) once read multibyte text right after $version as part of the name.
+        for lang in ("zh_CN.UTF-8", "en_US.UTF-8"):
+            with self.subTest(lang=lang):
+                r = Releases("0.2.0", ["0.2.0"])
+                self.addCleanup(r.close)
+                p, binary = self.run_install(r, LANG=lang, LC_ALL=lang)
+                self.assertEqual(p.returncode, 0, p.stderr)
+                self.assertIn("Downloading kusa-connect 0.2.0 (", p.stdout)
 
     def test_pinned_version(self):
         r = Releases("0.2.0", ["0.1.0", "0.2.0"])
@@ -121,7 +131,7 @@ class InstallTest(unittest.TestCase):
         self.addCleanup(r.close)
         p, binary = self.run_install(r)
         self.assertNotEqual(p.returncode, 0)
-        self.assertIn("SHA256 对不上", p.stderr)
+        self.assertIn("SHA256 mismatch", p.stderr)
         self.assertFalse(os.path.exists(binary))
 
     def test_missing_version(self):
@@ -129,7 +139,7 @@ class InstallTest(unittest.TestCase):
         self.addCleanup(r.close)
         p, binary = self.run_install(r, KUSA_CONNECT_VERSION="9.9.9")
         self.assertNotEqual(p.returncode, 0)
-        self.assertIn("下载 kusa-connect_9.9.9_", p.stderr)
+        self.assertIn("couldn't download kusa-connect_9.9.9_", p.stderr)
         self.assertFalse(os.path.exists(binary))
 
 

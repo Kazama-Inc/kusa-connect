@@ -1,7 +1,7 @@
 name: test
 
-# install.sh 在 macOS（bash 作 sh）与 Linux（dash 作 sh）上各跑一遍；发布包本身在 Kazama-Inc/kusa-agent-client 的
-# kusa-connect-release 工作流里构建、发布到本仓库的 Releases。
+# Runs the install.sh tests on macOS (bash as sh) and Linux (dash as sh). The release packages themselves are built
+# by the kusa-connect-release workflow in Kazama-Inc/kusa-agent-client and published to this repository's Releases.
 on:
   push:
     branches: [main]
