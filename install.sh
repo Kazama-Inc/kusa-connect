@@ -79,4 +79,4 @@ case ":$PATH:" in
   *) say "提示：$install_dir 不在 PATH 里。把下面这行加进 ~/.zshrc 或 ~/.bashrc，再开一个新终端：
   export PATH=\"$install_dir:\$PATH\"" ;;
 esac
-say "接下来回到网页，复制「连接我的电脑」给的命令在这里运行。"
+say "接下来回到网页，复制「用 kusa-connect 连接」给的命令在这里运行。"

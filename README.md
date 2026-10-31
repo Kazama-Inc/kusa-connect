@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/Kazama-Inc/kusa-connect/main/instal
 
 ## 使用
 
-1. 在 Kusa 网页的「新建工作区」里选「连接我的电脑」，复制给出的命令。
+1. 在 Kusa 网页的「新建工作区」里选「电脑上的文件夹」，打开方式选「用 kusa-connect 连接」，复制给出的命令。
 2. 在电脑上运行它，把最后的目录换成你要开放的目录（可以给多个）：
 
    ```bash
