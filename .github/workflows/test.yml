@@ -1,0 +1,21 @@
+name: test
+
+# install.sh 在 macOS（bash 作 sh）与 Linux（dash 作 sh）上各跑一遍；发布包本身在 Kazama-Inc/kusa-agent-client 的
+# kusa-connect-release 工作流里构建、发布到本仓库的 Releases。
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  install:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m unittest discover -s test -v
